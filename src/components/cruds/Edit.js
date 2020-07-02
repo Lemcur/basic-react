@@ -1,61 +1,58 @@
 import React, { Component } from "react";
 import axios from "axios";
 
-const createCrudUrl = 'http://localhost:3100/api/v1/cruds'
-
-export default class Create extends Component {
+export default class Show extends Component {
   constructor(props) {
     super(props)
 
     this.state = {
-      some_text: "",
-      foo: "",
+      some_text: this.props.crud.some_text,
+      foo: this.props.crud.foo,
     }
-
-    this.handleSubmit = this.handleSubmit.bind(this)
-    this.handleChange = this.handleChange.bind(this)
   }
 
-  handleChange(event){
+  handleChange = (event) =>{
     this.setState({
       [event.target.name]: event.target.value,
     })
   }
 
-  handleSubmit(event) {
-    const { some_text, foo } = this.state
+  editCrud = (event) => {
+    event.preventDefault()
+    const id = this.props.crud.id
 
-    axios.post(
-      createCrudUrl,
+    axios.put(
+      `http://localhost:3100/api/v1/cruds/${id}`,
       {
-        some_text: some_text,
-        foo: foo,
-
+        some_text: this.state.some_text,
+        foo: this.state.foo
       },
       {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`
         }
       }
-    ).then(response => {
-      this.props.onSubmit(response.data)
-    }).catch(error => {
-      console.log(error)
+    ).then(() => {
+      this.props.onUpdate({
+        ...this.props.crud,
+        ...this.state
+      })
+      this.props.finishEditing()
+    }).catch(e => {
+      console.log(e)
     })
-    event.preventDefault();
   }
 
   render() {
     return (
       <div>
-        <form onSubmit={this.handleSubmit}>
-          <input
+        <form onSubmit={this.editCrud}>
+        <input
             type="some_text"
             name="some_text"
             placeholder="some_text"
             value={this.state.some_text}
             onChange={this.handleChange}
-            required
           />
           <input
             type="foo"
@@ -63,9 +60,8 @@ export default class Create extends Component {
             placeholder="foo"
             value={this.state.foo}
             onChange={this.handleChange}
-            required
           />
-          <button type="submit">Create</button>
+          <button type="submit">Edit</button>
         </form>
       </div>
     )
